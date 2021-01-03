@@ -1,0 +1,83 @@
+---
+title: "Hierarchical Edge Bundling"
+output: html_notebook
+---
+
+# Load packages
+
+```{r, message=FALSE}
+library(tidyverse)
+
+# for networks:
+library(igraph)
+library(ggraph)
+```
+
+# Create random data
+
+It's high time I learnt to create sample data!
+
+```{r}
+d1 <- tibble(
+  # one column with the same value, origin
+  from = 'origin',
+  to = paste('group', 1:10, sep = '_')
+)
+
+d2 <- tibble(
+  # replicate the `to` values from d1
+  from = rep(d1$to, each = 10), # replicate group_n 10 times each
+  to = paste('subgroup', 1:100, sep = '_')
+)
+
+# then bind them together, as they have the same col names!
+hierarchy <- rbind(d1, d2)
+
+hierarchy
+```
+To create a plot, we need the `vertices`. These are a dataframe with the `unique` values of `from` and `to`:
+
+```{r}
+vertices <-data.frame(
+    name = unique(c(hierarchy$to, hierarchy$from))
+  )
+
+vertices
+```
+
+Plot with `igraph` and `ggraph`:
+
+```{r}
+# using igraph
+mygraph <-
+  graph_from_data_frame(
+    hierarchy,
+    vertices = vertices
+  )
+
+plot(mygraph,
+     vertex.label = '',
+     edge.arrow.size = 0,
+     vertex.size = 0
+)
+```
+Then, using `ggraph`:
+
+```{r}
+mygraph %>%
+  ggraph(
+    layout = 'dendrogram',
+    circular = F
+  ) +
+  geom_edge_link()
+
+mygraph %>%
+  ggraph(
+    layout = 'dendrogram',
+    circular = T
+  ) +
+  geom_edge_diagonal()
+
+```
+
+

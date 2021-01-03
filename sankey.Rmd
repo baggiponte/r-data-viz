@@ -75,7 +75,7 @@ data_long %>%
     id_origin = match(data_long$origin, nodes$name) - 1,
     id_destination = match(data_long$destination, nodes$name) -1
   ) %>%
-  as_data_frame %>%
+  as.data.frame %>%
   sankeyNetwork(
   Nodes = nodes,
   Source = 'id_origin',
