@@ -1,0 +1,62 @@
+---
+title: "Sankey Test"
+output: html_notebook
+---
+
+# Packages required
+
+```{r}
+library(tidyverse)
+```
+
+# Load Data
+
+```{r}
+weburl = 'https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/13_AdjacencyDirectedWeighted.csv'
+
+data <-
+  read.table(weburl, header = TRUE)
+
+data
+```
+
+## Some wrangling
+
+```{r}
+data_long <-
+  data %>%
+  rownames_to_column() %>%
+  pivot_longer(
+    -rowname,
+    names_to = 'key',
+    values_to = 'value'
+  ) %>%
+  filter(value > 0) %>%
+  mutate(
+    key = str_replace_all(key, '[\\.]', ' ')
+  ) %>%
+  rename(
+    origin = rowname,
+    destination = key,
+  )
+
+data_long
+```
+
+# Set up
+
+From the flows data we need to create the nodes. We use `unique` to return a dataframe with only the destinations, with no repetition.
+
+```{r}
+nodes <-
+  data.frame(
+    name = c(data_long$origin, data_long$destination)
+  ) %>% unique()
+
+nodes
+```
+
+```{r}
+library(networkD3)
+```
+
