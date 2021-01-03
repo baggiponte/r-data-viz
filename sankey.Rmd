@@ -1,12 +1,16 @@
 ---
-title: "Sankey Test"
+title: "Sankey Diagram"
 output: html_notebook
 ---
 
 # Packages required
 
-```{r}
+```{r, message=FALSE}
+# for ggplot2 and data manipulation
 library(tidyverse)
+
+# for the diagram
+library(networkD3)
 ```
 
 # Load Data
@@ -25,15 +29,19 @@ data
 ```{r}
 data_long <-
   data %>%
+  # transform indices into a column on its own
   rownames_to_column() %>%
   pivot_longer(
-    -rowname,
+    -rowname, # this is the name of the col created via 'rownames_to_column()'
     names_to = 'key',
     values_to = 'value'
   ) %>%
   filter(value > 0) %>%
   mutate(
-    key = str_replace_all(key, '[\\.]', ' ')
+    # remove the dot between the values
+    key = str_replace_all(key, '[\\.]', ' '),
+    # a little trick: add one empty space at the end of each value
+    key = paste0(key, ' ')
   ) %>%
   rename(
     origin = rowname,
@@ -56,7 +64,28 @@ nodes <-
 nodes
 ```
 
+Data appears twice because we added a blank space at the end of `destination`: in this way, we will have the data displayed in two columns even when the starting point is the same as the end point.
+
+Then we match each name in the `data_long` with the corresponding one in `nodes`:
+
 ```{r}
-library(networkD3)
+data_long %>%
+  mutate(
+    # we need to use `match`, not `as.numeric`!
+    id_origin = match(data_long$origin, nodes$name) - 1,
+    id_destination = match(data_long$destination, nodes$name) -1
+  ) %>%
+  as_data_frame %>%
+  sankeyNetwork(
+  Nodes = nodes,
+  Source = 'id_origin',
+  Target = 'id_destination',
+  Value = 'value',
+  NodeID = 'name',
+  # sinksRight = FALSE,
+  nodeWidth=40, fontSize=13, nodePadding=20
+)
+
 ```
+
 
